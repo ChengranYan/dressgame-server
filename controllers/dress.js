@@ -34,50 +34,13 @@ const getDetail = (req, res, next) => {
     })
 }
 
-// const upload = (req, res, next) => {
-//   resource1 = []
-//   resource2 = []
-//   thumbnail = ''
-//   for (var i = req.files.length - 1; i >= 0; i--) {
-//     var name = req.files[i].filename
-//     if (resource1_reg.test(name)) {
-//       resource1.push('http://localhothumbnail_reg.test(namst:3000/'+name)
-//     } else if (e) {
-//       thumbnail = 'http://localhost:3000/'+name
-//     } else if (rest_reg.test(name)){
-//       resource2.push('http://localhost:3000/'+name)
-//     }
-//   }
-
-//   const dress = new Dress({
-//     thumbnail: thumbnail,
-//     resources: [resource1, resource2]
-//   });
-
-//   dress.save()
-//       .then(() => {
-//         console.log('save ok')
-//         res.json({
-//           ret: true
-//         })
-//       })
-// }
-
 const getTest = (req, res, next) => {
   walkdir(req, res, next)
-  // Dress.find({})
-  //     .then((result) => {
-  //       res.json(result)
-  //     })
-  // res.json({
-  //   ret: true
-  // })
 }
 
 const walkdir = (req, res, next) => {
   var walker;
-  var directoryPath = '/Users/chengran/Desktop/api-server/public'
-
+  var directoryPath = '/home/master/dressgame-express/dressgame-server/public'
 
   var options = {
     followLinks: false
@@ -86,7 +49,7 @@ const walkdir = (req, res, next) => {
   };
 
   walker = walk.walk(directoryPath, options);
-  var hostName = 'http://localhost:60000/';
+  var hostName = 'http://10.8.8.8:60000/';
   var data = []
   // walker.on("file", function (root, fileStats, next) {
   //   if(fileStats.name.indexOf('DS_Store') === -1) {
