@@ -1,12 +1,57 @@
 const axios = require('axios');
 const path = require('path');
-const walk = require('walk');
-const fs = require('fs');
-// const Dress = require('../model/dressgame.js');
 
+// const baseDir = '/Users/chengran/Desktop/api-server/public/'
+const baseDir = path.join(__dirname, '..', 'public') + '/'
+
+const hostPrefix = 'http://10.8.8.8:60000/'
 const resource1_reg = /_1_/
 const thumbnail_reg = /thumbnail/
 const rest_reg = /(.png$)|(.json$)/
+
+
+
+const klawSync = require('klaw-sync')
+const walk = require('walk-promise');
+
+const getFiles = (dir, gender) => {
+  return walk(dir).then(function (files) {
+    var res1 = [],
+      res2 = [],
+      thumbnail = '';
+    files.forEach((item) => {
+      if (item.name.indexOf('DS_Store') === -1) {
+        if (thumbnail_reg.test(item.name)) {
+          thumbnail = item.name
+        } else if (resource1_reg.test(item.name)) {
+          res1.push(hostPrefix + gender + '/' + item.name)
+        } else if (rest_reg.test(item.name)) {
+          res2.push(hostPrefix + gender + '/' + item.name)
+        }
+      }
+    })
+
+    return Promise.resolve({
+      thumbnail: thumbnail,
+      resources: [
+        res1,
+        res2
+      ]
+    })
+  });
+}
+
+
+const getGenderData = (gender) => {
+  var dir = baseDir + gender
+  const data = []
+  var files = klawSync(dir, { nofile: true })
+  var allPromises = files.map((file) => {
+    return getFiles(file.path, gender)
+  })
+  return allPromises
+}
+
 
 const getList = (req, res, next) => {
   axios({
@@ -35,94 +80,20 @@ const getDetail = (req, res, next) => {
 }
 
 const getTest = (req, res, next) => {
-  walkdir(req, res, next)
-}
+  var male =  getGenderData('male')
+  var female = getGenderData('female')
 
-const walkdir = (req, res, next) => {
-  var walker;
-  var directoryPath = '/home/master/dressgame-express/dressgame-server/public'
+  var malePromise = Promise.all(male)
+  var femalePromise = Promise.all(female)
 
-  var options = {
-    followLinks: false
-    // directories with these keys will be skipped
-  , filters: ["Temp", "_Temp", ".DS_Store", "static"]
-  };
-
-  walker = walk.walk(directoryPath, options);
-  var hostName = 'http://10.8.8.8:60000/';
-  var data = []
-  // walker.on("file", function (root, fileStats, next) {
-  //   if(fileStats.name.indexOf('DS_Store') === -1) {
-  //     var paths = root.split('/')
-  //     var path = paths[paths.length - 1]
-  //     console.log(path)
-  //     next()
-  //   }
-  walker.on('directories', function (root, dirStatsArray, next) {
-    // console.log(root)
-    // console.log(dirStatsArray.length)
-    // next()
-
-    dirStatsArray.forEach((item) => {
-      //do stuff
-      var obj = {}
-      fs.readdir(path.join(root,item.name), function (err, files) {
-        obj[item.name] = files
-        // obj[item.name].push(files)
-        data.push(obj)
-        next();
-      });
-      // console.log(item.name)
+  Promise.all([malePromise, femalePromise])
+  .then((data) => {
+    res.json({
+      maleData: data[0],
+      femaleData: data[1]
     })
   })
- 
-  walker.on("errors", function (root, nodeStatsArray, next) {
-    next();
-  });
- 
-  walker.on("end", function () {
-    var resultData = data.map(item => {
-      for(var name in item) {
-        var prefix = hostName + name
-        console.log(prefix)
-        item[name] = item[name].map((i) => {
-          if(i !== '.DS_Store') {
-            return prefix + '/' + i
-          }
-        })
-      }
-      return item
-    })
-    var ret = []
-    var result = resultData.map((item) => {
-      var thumbnail = ''
-      var res1 = []
-      var res2 = []
-      for(var val in item) {
-        item[val].forEach((currentValue, index, arr) => {
-          if(!currentValue){
-             // console.log(currentValue)
-          }else if(thumbnail_reg.test(currentValue)){
-            thumbnail = currentValue
-          }else if(resource1_reg.test(currentValue)){
-            res1.push(currentValue)
-          }else if(rest_reg.test(currentValue)){
-            res2.push(currentValue)
-          }
-        })
-      }
-      ret.push({
-        thumbnail: thumbnail,
-        resources: [
-          res1,
-          res2
-        ]
-      })
-      })
-    res.json({
-      data:ret
-    })
-  });
+  
 }
 
 
