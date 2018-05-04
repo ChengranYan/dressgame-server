@@ -23,7 +23,7 @@ const getFiles = (dir, gender) => {
       directory = item.root.split('/')[item.root.split('/').length-1]
       if (item.name.indexOf('DS_Store') === -1) {
         if (thumbnail_reg.test(item.name)) {
-          thumbnail = item.name
+          thumbnail = hostPrefix + gender + '/' + directory + '/' + item.name
         } else if (resource1_reg.test(item.name)) {
           res1.push(hostPrefix + gender + '/' + directory + '/' + item.name)
         } else if (rest_reg.test(item.name)) {
